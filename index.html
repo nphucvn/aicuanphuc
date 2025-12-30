@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>AI Sharingan Perfect</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  background:black;
+  font-family:monospace;
+  color:#0ff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+/* ===== BOOT ===== */
+#boot{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+}
+.eyePair{
+  display:none;
+  gap:5vw;
+}
+.eyePair img{
+  width:30vw;
+  max-width:160px;
+  min-width:110px;
+}
+
+/* ===== ROBOT ===== */
+#robot{
+  display:none;
+  text-align:center;
+  width:100%;
+}
+
+.face{
+  width:220px;
+  max-width:80vw;
+  margin:auto;
+}
+.eyes{
+  display:flex;
+  justify-content:space-between;
+  padding:40px;
+}
+.eye{
+  width:40px;
+  height:40px;
+  background:#00ffff;
+  border-radius:50%;
+}
+.mouth{
+  width:90px;
+  height:25px;
+  border:4px solid #00ffff;
+  border-top:none;
+  margin:auto;
+}
+
+.happy .mouth{border-radius:0 0 50px 50px;}
+.sad .mouth{border-top:4px solid #00ffff;border-bottom:none;}
+.angry .mouth{width:60px;}
+.surprise .mouth{
+  width:35px;height:35px;
+  border-radius:50%;
+  border:4px solid #00ffff;
+}
+.calm .mouth{width:90px;}
+
+canvas{margin-top:15px;}
+button{
+  margin-top:10px;
+  padding:8px 16px;
+  font-size:16px;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== BOOT SHARINGAN (ẢNH GỐC) ===== -->
+<div id="boot">
+  <div class="eyePair" id="p1">
+    <img src="eye1.jpg"><img src="eye1.jpg">
+  </div>
+  <div class="eyePair" id="p2">
+    <img src="eye2.jpg"><img src="eye2.jpg">
+  </div>
+  <div class="eyePair" id="p3">
+    <img src="eye3.jpg"><img src="eye3.jpg">
+  </div>
+</div>
+
+<!-- ===== ROBOT ===== -->
+<div id="robot">
+  <div class="face calm" id="face">
+    <div class="eyes">
+      <div class="eye"></div>
+      <div class="eye"></div>
+    </div>
+    <div class="mouth"></div>
+  </div>
+  <p id="status">🤖 Robot đang hoạt động</p>
+  <button onclick="startVoice()">🎤 Nói</button>
+</div>
+
+<script>
+/* ===== BOOT ===== */
+const pairs=[p1,p2,p3];
+let i=0;
+function nextPair(){
+  if(i>0) pairs[i-1].style.display="none";
+  if(i<pairs.length){
+    pairs[i].style.display="flex";
+    i++;
+    setTimeout(nextPair,5000);
+  }else{
+    boot.style.display="none";
+    startRobot();
+  }
+}
+nextPair();
+
+/* ===== ROBOT ===== */
+const emotions=["calm","happy","sad","angry","surprise"];
+function startRobot(){
+  robot.style.display="block";
+  changeEmotion();
+}
+function changeEmotion(){
+  face.className="face "+emotions[Math.floor(Math.random()*5)];
+  setTimeout(changeEmotion,13000);
+}
+
+/* ===== VOICE + HEART ===== */
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const r=new SR();
+  r.lang="vi-VN";
+  r.onresult=e=>{
+    const t=e.results[0][0].transcript.toLowerCase();
+    status.innerText="🗣️ "+t;
+    if(t.includes("thảo")) drawHeartSlow();
+  };
+  r.start();
+}
+
+function drawHeartSlow(){
+  const c=document.createElement("canvas");
+  c.width=200;c.height=200;
+  robot.appendChild(c);
+  const x=c.getContext("2d");
+
+  let p=0;
+  const draw=setInterval(()=>{
+    x.clearRect(0,0,200,200);
+    x.fillStyle="red";
+    x.beginPath();
+    x.moveTo(100,60+p);
+    x.bezierCurveTo(100,20,20,20,20,60+p);
+    x.bezierCurveTo(20,120,100,160,100,180);
+    x.bezierCurveTo(100,160,180,120,180,60+p);
+    x.bezierCurveTo(180,20,100,20,100,60+p);
+    x.fill();
+    p+=1;
+    if(p>20) clearInterval(draw);
+  },50);
+
+  setTimeout(()=>c.remove(),13000);
+}
+</script>
+
+</body>
+</html>
