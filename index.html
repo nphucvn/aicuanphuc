@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>AI Sharingan Robot</title>
+
+<style>
+body{
+  margin:0;
+  background:black;
+  color:#0f0;
+  font-family:monospace;
+  text-align:center;
+  overflow:hidden;
+}
+
+/* ===== BOOT ===== */
+#boot{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:40px;
+  z-index:10;
+}
+
+.eye{
+  width:160px;
+  height:160px;
+  opacity:0;
+  transform:scale(.4);
+  transition:1s;
+}
+
+.eye.show{opacity:1;transform:scale(1);}
+.calm{}
+.angry{animation:shake .15s infinite;filter:drop-shadow(0 0 15px red);}
+.awaken{animation:spin 1.2s linear infinite;filter:drop-shadow(0 0 25px crimson);}
+
+@keyframes shake{
+  0%{transform:translateX(-2px);}
+  50%{transform:translateX(2px);}
+  100%{transform:translateX(-2px);}
+}
+@keyframes spin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+
+/* ===== ROBOT ===== */
+#robot{display:none;padding-top:15px;}
+#robotFace{font-size:80px;}
+
+video,canvas{width:320px;border:2px solid #0f0;margin-top:10px;}
+
+#special{display:none;margin-top:20px;}
+</style>
+</head>
+
+<body>
+
+<!-- ===== SHARINGAN BOOT ===== -->
+<div id="boot">
+  <!-- Mắt trái -->
+  <svg class="eye calm" id="eye1" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="95" fill="red"/>
+    <circle cx="100" cy="100" r="20" fill="black"/>
+    <circle cx="100" cy="30" r="12" fill="black"/>
+    <circle cx="40" cy="130" r="12" fill="black"/>
+    <circle cx="160" cy="130" r="12" fill="black"/>
+  </svg>
+
+  <!-- Mắt giữa -->
+  <svg class="eye angry" id="eye2" viewBox="0 0 200 200">
+    <polygon points="100,10 140,80 190,100 140,120 100,190 60,120 10,100 60,80" fill="red"/>
+    <circle cx="100" cy="100" r="18" fill="black"/>
+  </svg>
+
+  <!-- Mắt phải -->
+  <svg class="eye awaken" id="eye3" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="95" fill="red"/>
+    <circle cx="100" cy="100" r="70" stroke="black" stroke-width="4" fill="none"/>
+    <circle cx="100" cy="100" r="40" stroke="black" stroke-width="4" fill="none"/>
+    <circle cx="100" cy="100" r="18" fill="black"/>
+  </svg>
+</div>
+
+<!-- ===== ROBOT AI ===== -->
+<div id="robot">
+  <div id="robotFace">🤖</div>
+  <p id="robotText">AI đã kích hoạt</p>
+  <button onclick="startVoice()">🎤 Nói</button>
+
+  <div id="special">
+    <canvas id="heartCanvas" width="300" height="300"></canvas>
+    <svg width="200" height="200" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="90" fill="red"/>
+      <polygon points="100,10 140,80 190,100 140,120 100,190 60,120 10,100 60,80" fill="black"/>
+      <circle cx="100" cy="100" r="18" fill="black"/>
+    </svg>
+  </div>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<script>
+/* ===== BOOT LOGIC ===== */
+const eyes=[eye1,eye2,eye3];
+let t=0;
+eyes.forEach(e=>{
+  t+=Math.random()*1200+800;
+  setTimeout(()=>e.classList.add("show"),t);
+});
+
+setTimeout(()=>{
+  boot.style.display="none";
+  robot.style.display="block";
+  speak("Tôi đã thức tỉnh. Xin chào.");
+  startCamera();
+},t+1500);
+
+/* ===== SPEECH ===== */
+function speak(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="vi-VN";
+  speechSynthesis.speak(u);
+}
+
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const r=new SR();
+  r.lang="vi-VN";
+  r.onresult=e=>{
+    const t=e.results[0][0].transcript.toLowerCase();
+    robotText.innerText="🗣️ "+t;
+
+    if(t.includes("chào")) speak("Chào bạn");
+
+    if(t.includes("lê phương thảo")){
+      speak("Cảm xúc được kích hoạt");
+      showMangekyoHeart();
+    }
+  };
+  r.start();
+}
+
+/* ===== HEART + MANGEKYO ===== */
+function showMangekyoHeart(){
+  const box=document.getElementById("special");
+  const c=document.getElementById("heartCanvas");
+  const ctx=c.getContext("2d");
+
+  box.style.display="block";
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle="red";
+  ctx.beginPath();
+  ctx.moveTo(150,90);
+  ctx.bezierCurveTo(150,20,20,20,20,90);
+  ctx.bezierCurveTo(20,160,150,220,150,260);
+  ctx.bezierCurveTo(150,220,280,160,280,90);
+  ctx.bezierCurveTo(280,20,150,20,150,90);
+  ctx.fill();
+
+  setTimeout(()=>box.style.display="none",13000);
+}
+
+/* ===== HAND AI ===== */
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+canvas.width=320;canvas.height=240;
+
+function startCamera(){
+  navigator.mediaDevices.getUserMedia({video:true})
+  .then(s=>video.srcObject=s);
+
+  const hands=new Hands({
+    locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+  });
+  hands.setOptions({maxNumHands:1,minDetectionConfidence:.7});
+
+  hands.onResults(r=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(r.multiHandLandmarks){
+      r.multiHandLandmarks[0].forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x*canvas.width,p.y*canvas.height,4,0,Math.PI*2);
+        ctx.fillStyle="lime";
+        ctx.fill();
+      });
+    }
+  });
+
+  new Camera(video,{
+    onFrame:async()=>await hands.send({image:video}),
+    width:320,height:240
+  }).start();
+}
+</script>
+
+</body>
+</html>
